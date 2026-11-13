@@ -155,6 +155,36 @@
   .tx-amt.dep{color:var(--dep-blue);}
   .tx-bal{text-align:right;font-size:14px;color:#a7acb5;font-weight:600;margin-top:8px;}
   .tx-foot{height:40px;}
+
+  /* ---------- 이체(송금 확인) 화면 ---------- */
+  .sd-head{display:flex;align-items:center;padding:16px 18px 8px;flex:0 0 auto;}
+  .sd-head .bk{width:26px;height:26px;color:#20242b;cursor:pointer;}
+  .sd-head .ti{font-size:20px;font-weight:800;color:#20242b;margin-left:12px;}
+  .sd-head .cancel{margin-left:auto;font-size:15px;font-weight:600;color:#5b616b;cursor:pointer;}
+  .sd-body{padding:12px 24px 0;}
+  .sd-avatars{display:flex;align-items:center;gap:10px;margin:8px 0 18px;}
+  .sd-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;}
+  .sd-av.ibk{background:var(--ibk-blue);font-size:13px;}
+  .sd-av.to{background:#d9a21b;}
+  .sd-arrow{color:#b9bec7;font-size:17px;font-weight:800;}
+  .sd-to{font-size:25px;font-weight:800;color:#15181d;letter-spacing:-.3px;}
+  .sd-toacc{font-size:14px;color:#9aa0a8;font-weight:600;margin-top:6px;}
+  .sd-ask{font-size:25px;font-weight:800;color:#15181d;margin-top:26px;letter-spacing:-.3px;}
+  .sd-amt{font-size:15px;color:#8a8f99;font-weight:600;margin-top:8px;}
+  .sd-card{margin:26px 0 0;border:1px solid #eef0f3;border-radius:16px;padding:4px 18px;}
+  .sd-line{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid #f2f4f7;}
+  .sd-line:last-child{border-bottom:0;}
+  .sd-line .k{font-size:15px;color:#6b7078;font-weight:600;}
+  .sd-line .v{font-size:15px;color:#20242b;font-weight:700;display:flex;align-items:center;gap:4px;text-align:right;}
+  .sd-line .v .bank{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ibk-blue);color:#fff;font-size:9px;font-weight:800;margin-right:4px;}
+  .sd-line .v .sub{display:block;font-size:12.5px;color:#9aa0a8;font-weight:600;margin-top:4px;}
+  .sd-line .v .chev{color:#c2c7cf;font-weight:800;}
+  .sd-more{text-align:center;font-size:15px;font-weight:700;color:#5b616b;padding:20px 0 0;cursor:pointer;}
+  .sd-foot{flex:0 0 auto;padding:0 20px;}
+  .sd-fee{text-align:center;font-size:14px;color:#9298a1;font-weight:600;padding:12px 0 14px;}
+  .sd-fee b{color:#3f84ff;font-weight:800;}
+  .sd-send{width:100%;border:0;border-radius:12px;padding:17px 0;font-size:17px;font-weight:800;color:#fff;background:var(--btn-blue);cursor:pointer;}
+  .sd-send:active{background:var(--btn-blue2);}
 </style>
 </head>
 <body>
@@ -214,7 +244,7 @@
           <svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
         </div>
         <div class="acct-btns">
-          <button onclick="event.stopPropagation()">이체</button>
+          <button onclick="event.stopPropagation();go('send')">이체</button>
           <button onclick="event.stopPropagation()">ATM출금</button>
         </div>
       </div>
@@ -276,6 +306,55 @@
     </div>
   </div>
 
+  <!-- ========== 이체(송금 확인) ========== -->
+  <div class="screen hidden" id="screen-send">
+    <div class="sd-head">
+      <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('home')"><path d="M15 6l-7 6 7 6"/></svg>
+      <div class="ti">이체</div>
+      <div class="cancel" onclick="go('home')">취소</div>
+    </div>
+    <div class="scroll">
+      <div class="sd-body">
+        <div class="sd-avatars">
+          <div class="sd-av ibk">IBK</div>
+          <div class="sd-arrow">▸</div>
+          <div class="sd-av to" id="sdToIco">송</div>
+        </div>
+        <div class="sd-to"><span id="sdTo">송현준</span>님께</div>
+        <div class="sd-toacc" id="sdToAcc">국민 98270100004345</div>
+
+        <div class="sd-ask"><span id="sdAmt2">100원</span>을 보낼까요?</div>
+        <div class="sd-amt" id="sdAmt">100원</div>
+
+        <div class="sd-card">
+          <div class="sd-line">
+            <span class="k">출금계좌</span>
+            <span class="v"><span><span class="bank">IBK</span>기업 <span id="sdFromNo">408-051742-01-015</span><span class="sub" id="sdFromName">보통예금(IBK W통장)</span></span></span>
+          </div>
+          <div class="sd-line">
+            <span class="k">내 통장 표기</span>
+            <span class="v"><span id="sdMemoMe">송현준</span><span class="chev">›</span></span>
+          </div>
+          <div class="sd-line">
+            <span class="k">받는 분 통장 표기</span>
+            <span class="v"><span id="sdMemoTo">송현준</span><span class="chev">›</span></span>
+          </div>
+        </div>
+
+        <div class="sd-more">추가정보입력 <span style="font-weight:800">⌄</span></div>
+      </div>
+    </div>
+    <div class="sd-foot">
+      <div class="sd-fee">기업은행은 <b>평생 수수료 무료</b>!</div>
+      <button class="sd-send" onclick="go('home')">보내기</button>
+    </div>
+    <div class="navbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-7 6 7 6"/></svg>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -292,6 +371,17 @@ const DATA = {
   },
   filter: "1개월 · 전체 · 최신순",
   range: "2026.10.01 ~ 2026.10.30",
+  transfer: {
+    toName:   "송현준",
+    toIcon:   "송",                       // 받는 분 아바타 글자
+    toBank:   "국민",                      // 받는 은행
+    toNumber: "98270100004345",
+    amount:   "100원",                     // 보낼 금액
+    fromNo:   "408-051742-01-015",
+    fromName: "보통예금(IBK W통장)",
+    memoMe:   "송현준",                    // 내 통장 표기
+    memoTo:   "송현준",                    // 받는 분 통장 표기
+  },
   tx: [
     { dt:"10.30 14:55", name:"송현준",   amount: 4560000,  bal:"14,560,905" },
     { dt:"10.30 14:54", name:"송현준",   amount: 4000000,  bal:"10,000,905" },
@@ -336,6 +426,17 @@ function render(){
   document.getElementById("txFilter").innerHTML   = DATA.filter + ' <span class="cv">⌄</span>';
   document.getElementById("txRange").textContent  = DATA.range;
 
+  const T = DATA.transfer;
+  document.getElementById("sdTo").textContent      = T.toName;
+  document.getElementById("sdToIco").textContent   = T.toIcon;
+  document.getElementById("sdToAcc").textContent   = T.toBank + " " + T.toNumber;
+  document.getElementById("sdAmt").textContent     = T.amount;
+  document.getElementById("sdAmt2").textContent    = T.amount;
+  document.getElementById("sdFromNo").textContent  = T.fromNo;
+  document.getElementById("sdFromName").textContent= T.fromName;
+  document.getElementById("sdMemoMe").textContent  = T.memoMe;
+  document.getElementById("sdMemoTo").textContent  = T.memoTo;
+
   const list = document.getElementById("txList");
   list.innerHTML = DATA.tx.map(t => `
     <div class="tx-row">
@@ -352,7 +453,8 @@ function render(){
 function go(s){
   document.getElementById("screen-home").classList.toggle("hidden", s!=="home");
   document.getElementById("screen-tx").classList.toggle("hidden",   s!=="tx");
-  const sc = (s==="home"?document.querySelector("#screen-home .scroll"):document.querySelector("#screen-tx .scroll"));
+  document.getElementById("screen-send").classList.toggle("hidden", s!=="send");
+  const sc = document.querySelector("#screen-"+s+" .scroll");
   if(sc) sc.scrollTop = 0;
 }
 
