@@ -185,6 +185,35 @@
   .sd-fee b{color:#3f84ff;font-weight:800;}
   .sd-send{width:100%;border:0;border-radius:12px;padding:17px 0;font-size:17px;font-weight:800;color:#fff;background:var(--btn-blue);cursor:pointer;}
   .sd-send:active{background:var(--btn-blue2);}
+
+  /* ---------- 설정 에디터 (종 아이콘) ---------- */
+  .ed-mask{position:absolute;inset:0;background:#fff;z-index:50;display:flex;flex-direction:column;}
+  .ed-mask.hidden{display:none;}
+  .ed-head{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);flex:0 0 auto;}
+  .ed-head .ti{font-size:18px;font-weight:800;color:#20242b;}
+  .ed-head .x{margin-left:auto;font-size:15px;font-weight:700;color:#5b616b;cursor:pointer;padding:4px 6px;}
+  .ed-body{flex:1;overflow-y:auto;padding:4px 18px 20px;}
+  .ed-body::-webkit-scrollbar{width:0;}
+  .ed-sec{font-size:13px;font-weight:800;color:#8a8f99;letter-spacing:.3px;margin:22px 0 10px;text-transform:uppercase;}
+  .ed-f{margin-bottom:12px;}
+  .ed-f label{display:block;font-size:12.5px;font-weight:700;color:#6b7078;margin-bottom:5px;}
+  .ed-f input{width:100%;border:1px solid #e3e6ea;border-radius:10px;padding:11px 12px;font-size:15px;color:#20242b;font-weight:600;background:#fafbfc;}
+  .ed-f input:focus{outline:none;border-color:var(--btn-blue);background:#fff;}
+  .ed-f.row2{display:flex;gap:10px;}
+  .ed-f.row2>div{flex:1;}
+  .ed-txrow{border:1px solid #eef0f3;border-radius:12px;padding:12px;margin-bottom:10px;position:relative;}
+  .ed-txrow .del{position:absolute;top:8px;right:10px;font-size:18px;color:#c2c7cf;font-weight:800;cursor:pointer;line-height:1;}
+  .ed-txgrid{display:flex;gap:8px;}
+  .ed-txgrid>div{flex:1;}
+  .ed-txgrid input{width:100%;border:1px solid #e3e6ea;border-radius:8px;padding:9px 10px;font-size:13px;font-weight:600;background:#fafbfc;}
+  .ed-txgrid input:focus{outline:none;border-color:var(--btn-blue);background:#fff;}
+  .ed-txgrid .lab{font-size:10.5px;font-weight:700;color:#9aa0a8;margin-bottom:4px;}
+  .ed-add{width:100%;border:1.5px dashed #cfd4da;background:#fff;border-radius:10px;padding:12px;font-size:14px;font-weight:700;color:#5b616b;cursor:pointer;margin-top:2px;}
+  .ed-foot{flex:0 0 auto;padding:12px 18px 16px;border-top:1px solid var(--line);display:flex;gap:10px;background:#fff;}
+  .ed-foot button{flex:1;border:0;border-radius:11px;padding:14px 0;font-size:15px;font-weight:800;cursor:pointer;}
+  .ed-reset{background:#f2f4f7;color:#5b616b;}
+  .ed-apply{background:var(--btn-blue);color:#fff;}
+  .ed-apply:active{background:var(--btn-blue2);}
 </style>
 </head>
 <body>
@@ -212,7 +241,7 @@
       <div class="home-head">
         <div class="home-title">할 일 <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#2b2f36" stroke-width="3"><path d="M4 12l6 6L20 6"/></svg></span></div>
         <div class="head-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <svg onclick="openEditor()" style="cursor:pointer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="2" y="13" width="4" height="7" rx="2"/><rect x="18" y="13" width="4" height="7" rx="2"/><path d="M20 19a4 4 0 01-4 4h-2"/></svg>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         </div>
@@ -355,6 +384,49 @@
     </div>
   </div>
 
+  <!-- ========== 설정 에디터 ========== -->
+  <div class="ed-mask hidden" id="editor">
+    <div class="ed-head">
+      <div class="ti">내용 설정</div>
+      <div class="x" onclick="closeEditor()">닫기 ✕</div>
+    </div>
+    <div class="ed-body">
+      <div class="ed-sec">계좌 (홈)</div>
+      <div class="ed-f"><label>계좌명</label><input id="e_acctName"></div>
+      <div class="ed-f row2">
+        <div><label>계좌번호</label><input id="e_acctNo"></div>
+        <div><label>잔액</label><input id="e_balance"></div>
+      </div>
+
+      <div class="ed-sec">이체 화면</div>
+      <div class="ed-f row2">
+        <div><label>받는 사람</label><input id="e_toName"></div>
+        <div><label>아바타 글자</label><input id="e_toIcon"></div>
+      </div>
+      <div class="ed-f row2">
+        <div><label>받는 은행</label><input id="e_toBank"></div>
+        <div><label>받는 계좌</label><input id="e_toNumber"></div>
+      </div>
+      <div class="ed-f"><label>보낼 금액</label><input id="e_amount"></div>
+      <div class="ed-f row2">
+        <div><label>내 통장 표기</label><input id="e_memoMe"></div>
+        <div><label>받는 분 표기</label><input id="e_memoTo"></div>
+      </div>
+
+      <div class="ed-sec">거래내역</div>
+      <div class="ed-f row2">
+        <div><label>필터 문구</label><input id="e_filter"></div>
+        <div><label>기간</label><input id="e_range"></div>
+      </div>
+      <div id="e_txList"></div>
+      <div class="ed-add" onclick="edAddTx()">+ 거래 추가</div>
+    </div>
+    <div class="ed-foot">
+      <button class="ed-reset" onclick="edReset()">초기화</button>
+      <button class="ed-apply" onclick="edApply()">적용</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -458,12 +530,83 @@ function go(s){
   if(sc) sc.scrollTop = 0;
 }
 
+/* ---- 설정 에디터 ---- */
+const DEFAULTS = JSON.parse(JSON.stringify(DATA));
+const LS_KEY = "ibk_clone_data";
+
+function loadSaved(){
+  try{
+    const s = localStorage.getItem(LS_KEY);
+    if(s){ const o = JSON.parse(s); Object.assign(DATA, o); }
+  }catch(e){}
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){}
+}
+
+function txRowHTML(t){
+  return `<div class="ed-txrow">
+    <div class="del" onclick="this.parentNode.remove()">×</div>
+    <div class="ed-txgrid">
+      <div><div class="lab">일시</div><input class="tx-dt2" value="${t.dt||''}"></div>
+      <div><div class="lab">이름</div><input class="tx-nm2" value="${t.name||''}"></div>
+    </div>
+    <div class="ed-txgrid" style="margin-top:8px">
+      <div><div class="lab">금액(+입금/-출금)</div><input class="tx-am2" value="${t.amount??''}"></div>
+      <div><div class="lab">직후 잔액</div><input class="tx-bl2" value="${t.bal||''}"></div>
+    </div>
+  </div>`;
+}
+function edAddTx(d){
+  const wrap=document.createElement("div");
+  wrap.innerHTML = txRowHTML(d||{dt:"",name:"",amount:"",bal:""});
+  document.getElementById("e_txList").appendChild(wrap.firstChild);
+}
+
+function openEditor(){
+  const A=DATA.account, T=DATA.transfer;
+  e_acctName.value=A.name; e_acctNo.value=A.number; e_balance.value=A.balance;
+  e_toName.value=T.toName; e_toIcon.value=T.toIcon; e_toBank.value=T.toBank;
+  e_toNumber.value=T.toNumber; e_amount.value=T.amount;
+  e_memoMe.value=T.memoMe; e_memoTo.value=T.memoTo;
+  e_filter.value=DATA.filter; e_range.value=DATA.range;
+  document.getElementById("e_txList").innerHTML="";
+  DATA.tx.forEach(edAddTx);
+  document.getElementById("editor").classList.remove("hidden");
+}
+function closeEditor(){ document.getElementById("editor").classList.add("hidden"); }
+
+function edApply(){
+  DATA.account.name=e_acctName.value; DATA.account.number=e_acctNo.value; DATA.account.balance=e_balance.value;
+  const T=DATA.transfer;
+  T.toName=e_toName.value; T.toIcon=e_toIcon.value; T.toBank=e_toBank.value;
+  T.toNumber=e_toNumber.value; T.amount=e_amount.value;
+  T.memoMe=e_memoMe.value; T.memoTo=e_memoTo.value;
+  DATA.filter=e_filter.value; DATA.range=e_range.value;
+
+  const rows=[...document.querySelectorAll("#e_txList .ed-txrow")];
+  DATA.tx = rows.map(r=>{
+    const raw=r.querySelector(".tx-am2").value.trim().replace(/,/g,"");
+    const amt = raw==="" ? 0 : (isNaN(Number(raw)) ? raw : Number(raw));
+    const t={ dt:r.querySelector(".tx-dt2").value, name:r.querySelector(".tx-nm2").value,
+              amount:amt, bal:r.querySelector(".tx-bl2").value };
+    return t;
+  });
+  save(); render(); closeEditor();
+}
+function edReset(){
+  if(!confirm("영상 기본값으로 되돌릴까?")) return;
+  Object.assign(DATA, JSON.parse(JSON.stringify(DEFAULTS)));
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  render(); openEditor();
+}
+
 /* 실시간 시계 */
 function tick(){
   const d=new Date();
   document.getElementById("clock").textContent = d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");
 }
-render(); tick(); setInterval(tick,10000);
+loadSaved(); render(); tick(); setInterval(tick,10000);
 </script>
 </body>
 </html>
