@@ -3,18 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>IBK W통장</title>
+<title>IBK W통장 — 클론 연습버전</title>
 <style>
   /* ============================================================
-     IBK i-ONE 뱅크 클론 — 전체 화면/계좌/거래내역 데이터는
-     아래 <script> 맨 위 DATA 블록에서 한 번에 수정한다.
-     폰트/색/레이아웃만 이 CSS. 숫자는 손대지 말 것.
+     IBK i-ONE 뱅크 클론 (연습버전)
+     - 화면/계좌/거래 기본값은 아래 <script> 맨 위 DATA 블록.
+     - 종(🔔) 버튼을 누르면 편집모드 → 화면의 모든 캡션을
+       직접 눌러 수정. 수정값은 localStorage 저장(초기화 가능).
      ============================================================ */
   :root{
-    --ibk-blue:#1a4fa0;        /* IBK 로고 블루 */
-    --btn-blue:#4c8dff;        /* 이체/ATM 버튼 */
+    --ibk-blue:#1a4fa0;
+    --btn-blue:#4c8dff;
     --btn-blue2:#3f84ff;
-    --dep-blue:#1267d6;        /* 입금(+) 금액 */
+    --dep-blue:#1267d6;
     --ink:#1a1a1a;
     --ink2:#333;
     --gray:#8a8f99;
@@ -24,6 +25,7 @@
     --card:#ffffff;
     --chip:#f2f4f7;
     --nav-h:58px;
+    --edit:#ff5a3c;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;background:#0d0f12;}
@@ -32,46 +34,44 @@
     display:flex;justify-content:center;align-items:flex-start;min-height:100vh;
     color:var(--ink);
   }
-  /* 폰 프레임 */
   .phone{
     position:relative;width:100%;max-width:412px;height:100vh;max-height:892px;
     background:var(--bg);overflow:hidden;box-shadow:0 0 0 1px #000, 0 20px 60px rgba(0,0,0,.6);
   }
   @media (max-width:412px){ .phone{max-height:none;height:100vh;box-shadow:none;} }
 
-  /* ---------- 상단 상태바 ---------- */
+  /* 상태바 */
   .statusbar{
     height:30px;display:flex;align-items:center;justify-content:space-between;
     padding:0 16px;font-size:13px;font-weight:600;color:#1a1a1a;background:var(--bg);
-    flex:0 0 auto;letter-spacing:.2px;
+    flex:0 0 auto;letter-spacing:.2px;position:relative;z-index:5;
   }
-  .statusbar.dark{color:#1a1a1a;}
   .sb-left{display:flex;align-items:center;gap:7px;}
   .sb-right{display:flex;align-items:center;gap:6px;font-size:12px;}
   .sb-ico{opacity:.85;}
   .batt{display:flex;align-items:center;gap:3px;font-size:12px;}
   .batt svg{display:block;}
 
-  /* ---------- 공통 스크롤 영역 ---------- */
+  /* 스크롤 영역 */
   .screen{position:absolute;inset:30px 0 0 0;display:flex;flex-direction:column;background:var(--bg);}
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .scroll::-webkit-scrollbar{width:0;}
-  .hidden{display:none;}
+  .hidden{display:none !important;}
 
-  /* ---------- HOME: 헤더 ---------- */
+  /* ---------- HOME ---------- */
   .home-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;}
   .home-title{display:flex;align-items:center;gap:6px;font-size:21px;font-weight:800;color:#2b2f36;}
   .home-title .chk{width:22px;height:22px;border:2px solid #2b2f36;border-radius:6px;display:flex;align-items:center;justify-content:center;}
   .home-title .chk svg{width:13px;height:13px;}
   .head-ic{display:flex;align-items:center;gap:16px;color:#2b2f36;}
   .head-ic svg{width:23px;height:23px;display:block;}
+  .bell{position:relative;cursor:pointer;display:flex;}
+  .bell .dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--edit);display:none;}
 
-  /* 프로모 배너 */
   .promo{padding:4px 20px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
   .promo .t{font-size:18px;font-weight:800;line-height:1.32;color:#20242b;}
   .promo .mascot{font-size:46px;line-height:1;filter:saturate(1.1);}
 
-  /* 금융 탭 */
   .fin-tabs{display:flex;align-items:center;gap:6px;padding:0 18px;margin-top:2px;}
   .fin-tab{position:relative;padding:10px 6px 12px;font-size:15px;font-weight:700;color:#b9bec7;display:flex;align-items:center;gap:6px;}
   .fin-tab.on{color:#20242b;}
@@ -80,7 +80,6 @@
   .easy{margin-left:auto;display:flex;align-items:center;gap:3px;color:#5b616b;font-size:14px;font-weight:700;padding-right:4px;}
   .easy .sm{font-size:11px;}.easy .lg{font-size:18px;}
 
-  /* 계좌 카드 */
   .acct-card{margin:14px 16px 0;background:var(--card);border:1px solid #eef0f3;border-radius:18px;padding:20px 20px 18px;box-shadow:0 6px 18px rgba(20,40,80,.05);cursor:pointer;}
   .acct-top{display:flex;align-items:flex-start;justify-content:space-between;}
   .acct-name{font-size:18px;font-weight:800;color:#20242b;}
@@ -99,14 +98,12 @@
   .dots-ind i{width:7px;height:7px;border-radius:50%;background:#d7dbe0;}
   .dots-ind i.on{width:18px;border-radius:4px;background:#3a3f47;}
 
-  /* 바로가기 2칸 */
   .quick2{margin:8px 16px 0;border:1px solid #eef0f3;border-radius:16px;display:flex;overflow:hidden;}
   .quick2 .q{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 8px;font-size:15px;font-weight:700;color:#2b2f36;cursor:pointer;}
   .quick2 .q:first-child{border-right:1px solid #eef0f3;}
   .q-ic{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;}
   .q .chev{margin-left:2px;color:#b9bec7;font-weight:800;}
 
-  /* 맞춤메뉴 */
   .mymenu-h{font-size:18px;font-weight:800;color:#20242b;padding:22px 20px 6px;}
   .mymenu{display:flex;justify-content:space-between;padding:8px 18px 4px;gap:8px;}
   .mm{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;}
@@ -118,7 +115,7 @@
   .promo2 .p2t{color:#fff;font-size:19px;font-weight:800;}
   .promo2 .p2big{position:absolute;right:14px;bottom:-6px;font-size:40px;font-weight:900;color:rgba(255,255,255,.14);letter-spacing:-2px;}
 
-  /* ---------- 하단 네비 ---------- */
+  /* 하단 네비 */
   .tabbar{flex:0 0 auto;height:var(--nav-h);display:flex;align-items:flex-start;justify-content:space-around;
     background:var(--bg);border-top:1px solid #f0f2f4;padding-top:7px;position:relative;}
   .tb{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:#9298a1;font-weight:600;cursor:pointer;flex:1;}
@@ -128,25 +125,102 @@
   .tb.center .c svg{width:26px;height:26px;color:#fff;}
   .tb.center .lb{color:var(--btn-blue);font-weight:800;margin-top:2px;}
 
-  /* 안드로이드 제스처 바 */
   .navbar{flex:0 0 auto;height:34px;display:flex;align-items:center;justify-content:space-around;background:var(--bg);}
   .navbar svg{width:20px;height:20px;color:#2b2f36;opacity:.8;}
 
-  /* ---------- 거래내역 화면 ---------- */
-  .tx-head{display:flex;align-items:center;gap:14px;padding:16px 18px 12px;flex:0 0 auto;}
-  .tx-head .bk{width:26px;height:26px;color:#20242b;cursor:pointer;}
-  .tx-head .ti{font-size:20px;font-weight:800;color:#20242b;}
-  .tx-head .hm{margin-left:auto;width:24px;height:24px;color:#20242b;}
+  /* ---------- 공통 서브헤더 / CTA ---------- */
+  .subhead{display:flex;align-items:center;gap:14px;padding:16px 18px 12px;flex:0 0 auto;}
+  .subhead .bk{width:26px;height:26px;color:#20242b;cursor:pointer;flex:0 0 auto;}
+  .subhead .ti{font-size:20px;font-weight:800;color:#20242b;}
+  .subhead .rt{margin-left:auto;display:flex;align-items:center;gap:14px;color:#20242b;}
+  .subhead .rt .cancel{font-size:15px;font-weight:700;color:#5b616b;cursor:pointer;}
+  .subhead .rt svg{width:24px;height:24px;}
+  .cta-wrap{flex:0 0 auto;padding:10px 16px 8px;background:var(--bg);}
+  .cta{width:100%;border:0;border-radius:13px;padding:17px 0;font-size:17px;font-weight:800;color:#fff;background:var(--btn-blue);cursor:pointer;}
+  .cta:active{background:var(--btn-blue2);}
+  .cta.ghost{background:#eef1f5;color:#8a8f99;}
+
+  /* ---------- 아바타 ---------- */
+  .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:800;flex:0 0 auto;}
+
+  /* ---------- 이체: 받는사람 ---------- */
+  .tf-q{font-size:22px;font-weight:800;color:#20242b;padding:6px 20px 16px;}
+  .tf-input{margin:0 18px 12px;display:flex;align-items:center;gap:8px;background:#f4f6f9;border-radius:12px;padding:14px 16px;color:#aeb4bd;font-size:15px;font-weight:600;}
+  .tf-input svg{width:18px;height:18px;margin-left:auto;color:#9aa0a8;}
+  .tf-sub2{display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 20px 10px;color:#5b616b;font-size:13.5px;font-weight:700;}
+  .tf-sub2 span{display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .tf-tabs{display:flex;gap:10px;padding:4px 18px 6px;}
+  .tf-tab{flex:1;text-align:center;padding:12px 0;border-radius:11px;font-size:15px;font-weight:700;color:#8a8f99;background:#f4f6f9;cursor:pointer;}
+  .tf-tab.on{color:#fff;background:#20242b;}
+  .tf-myacct{display:flex;align-items:center;gap:6px;padding:16px 20px 8px;font-size:15px;font-weight:700;color:#20242b;cursor:pointer;}
+  .tf-myacct .cv{color:#9aa0a8;margin-left:2px;}
+  .recentH{padding:6px 20px 4px;font-size:14px;font-weight:700;color:#8a8f99;}
+  .recent-item{display:flex;align-items:center;gap:13px;padding:13px 20px;cursor:pointer;}
+  .recent-item:active{background:#f6f8fa;}
+  .ri-txt{flex:1;min-width:0;}
+  .ri-name{font-size:16px;font-weight:800;color:#20242b;}
+  .ri-acc{font-size:13px;color:#9aa0a8;margin-top:3px;}
+  .ri-date{font-size:12px;color:#b4b9c1;font-weight:600;flex:0 0 auto;}
+
+  /* ---------- 이체: 금액 ---------- */
+  .amt-from{padding:18px 20px 4px;}
+  .amt-lbl{font-size:14px;color:#8a8f99;font-weight:700;margin-bottom:8px;}
+  .amt-accrow{display:flex;align-items:center;gap:10px;}
+  .amt-accrow .av{width:26px;height:26px;font-size:12px;}
+  .amt-acc{font-size:16px;font-weight:700;color:#20242b;}
+  .amt-acc .cv{color:#9aa0a8;margin-left:3px;}
+  .amt-change{color:var(--btn-blue);font-size:14px;font-weight:700;margin-left:4px;cursor:pointer;}
+  .amt-avail{font-size:13px;color:#9aa0a8;margin:6px 0 0 36px;}
+  .amt-big{padding:22px 20px 2px;font-size:30px;font-weight:800;color:#15181d;border-bottom:1.5px solid #e6e8ec;margin:14px 18px 0;}
+  .amt-big .won{font-weight:800;}
+  .amt-han{padding:9px 20px 0;font-size:13.5px;color:#9aa0a8;}
+  .amt-spacer{flex:1;}
+  .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid #eef0f3;}
+  .kq{grid-column:span 1;padding:11px 0;text-align:center;font-size:13px;font-weight:700;color:#4a4f57;border-right:1px solid #f0f2f4;border-bottom:1px solid #f0f2f4;background:#fafbfc;cursor:pointer;}
+  .kp{display:grid;grid-template-columns:repeat(3,1fr);}
+  .kp .k{padding:16px 0;text-align:center;font-size:22px;font-weight:700;color:#20242b;cursor:pointer;}
+  .kp .k:active{background:#eef1f5;}
+  .chkrow{display:flex;align-items:center;gap:9px;padding:14px 20px 6px;font-size:15px;font-weight:700;color:#4a4f57;}
+  .chkbox{width:20px;height:20px;border:2px solid #cfd4db;border-radius:5px;flex:0 0 auto;}
+  .guide-c{text-align:center;color:#8a8f99;font-size:14px;font-weight:700;text-decoration:underline;padding:10px 0 2px;}
+
+  /* ---------- 이체: 확인 ---------- */
+  .cf-to{display:flex;align-items:center;gap:13px;padding:22px 20px 4px;}
+  .cf-to .av{width:46px;height:46px;font-size:19px;}
+  .cf-toname{font-size:19px;font-weight:800;color:#20242b;}
+  .cf-toacc{font-size:13px;color:#9aa0a8;margin-top:3px;}
+  .cf-amount{padding:18px 20px 22px;font-size:26px;font-weight:800;color:#15181d;}
+  .cf-card{margin:0 16px;border:1px solid #eef0f3;border-radius:16px;overflow:hidden;}
+  .cf-row{display:flex;align-items:center;justify-content:space-between;padding:17px 18px;border-bottom:1px solid #f2f4f7;gap:10px;}
+  .cf-row:last-child{border-bottom:0;}
+  .cf-k{font-size:14px;color:#8a8f99;font-weight:700;flex:0 0 auto;}
+  .cf-v{font-size:15px;color:#20242b;font-weight:700;text-align:right;}
+  .cf-v .sub{display:block;font-size:12px;color:#9aa0a8;font-weight:600;margin-top:3px;}
+  .cf-v .chev{color:#c2c7ce;margin-left:4px;}
+  .cf-more{display:flex;align-items:center;justify-content:center;gap:5px;padding:16px;color:#5b616b;font-size:14px;font-weight:700;}
+  .cf-free{text-align:center;color:#8a8f99;font-size:13px;font-weight:700;padding:16px 0 6px;}
+
+  /* ---------- 이체확인증 (영수증) ---------- */
+  .rc-h{font-size:26px;font-weight:800;color:#15181d;padding:14px 22px 18px;}
+  .rc-table{margin:0 20px;border-top:2px solid #e6e8ec;border-bottom:1px solid #e6e8ec;}
+  .rc-row{display:flex;}
+  .rc-k{width:118px;flex:0 0 118px;background:#f4f6f8;color:#6b7078;font-size:14px;font-weight:700;padding:15px 16px;border-bottom:1px solid #eceef1;}
+  .rc-v{flex:1;color:#20242b;font-size:14px;font-weight:700;padding:15px 16px;text-align:right;border-bottom:1px solid #eceef1;}
+  .rc-note{padding:20px 22px 2px;font-size:16px;font-weight:800;color:#20242b;}
+  .rc-note2{padding:8px 22px 0;font-size:13px;color:#9aa0a8;line-height:1.5;}
+  .rc-logo{display:flex;align-items:center;justify-content:flex-end;gap:7px;padding:16px 22px 6px;color:var(--ibk-blue);font-weight:900;font-size:16px;}
+  .rc-logo .bx{background:var(--ibk-blue);color:#fff;font-size:11px;font-weight:900;padding:2px 5px;border-radius:5px;letter-spacing:-.5px;}
+
+  /* ---------- 거래내역 ---------- */
   .tx-tabs{display:flex;gap:18px;padding:2px 20px 14px;border-bottom:1px solid var(--line);flex:0 0 auto;}
-  .tx-tabs span{font-size:14.5px;font-weight:700;color:#bcc1c9;position:relative;padding-bottom:4px;}
+  .tx-tabs span{font-size:14.5px;font-weight:700;color:#bcc1c9;position:relative;padding-bottom:4px;cursor:pointer;}
   .tx-tabs span.on{color:#20242b;}
   .tx-filter{display:flex;align-items:center;gap:6px;padding:16px 20px 8px;font-size:15px;font-weight:700;color:#20242b;}
   .tx-filter .cv{color:#8a8f99;}
   .tx-range{background:#f2f4f7;color:#9298a1;font-size:14px;font-weight:600;padding:12px 20px;}
-
   .tx-list{padding:0 20px;}
-  .tx-row{padding:20px 0;border-bottom:1px solid #f4f5f7;}
-  .tx-row.hl{background:#f2f5f8;margin:0 -20px;padding:20px;border-bottom:1px solid #eef0f3;}
+  .tx-row{padding:20px 0;border-bottom:1px solid #f4f5f7;cursor:pointer;}
+  .tx-row:active{background:#f6f8fa;margin:0 -20px;padding:20px;}
   .tx-dt{font-size:13px;color:#9aa0a8;font-weight:600;margin-bottom:10px;}
   .tx-main{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
   .tx-name{font-size:19px;font-weight:800;color:#20242b;}
@@ -155,24 +229,62 @@
   .tx-amt.dep{color:var(--dep-blue);}
   .tx-bal{text-align:right;font-size:14px;color:#a7acb5;font-weight:600;margin-top:8px;}
   .tx-foot{height:40px;}
+
+  /* ---------- 상세거래내역 모달 ---------- */
+  .modal{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:flex-end;}
+  .modal .dim{position:absolute;inset:0;background:rgba(20,26,34,.55);}
+  .sheet{position:relative;background:#fff;border-radius:20px 20px 0 0;max-height:82%;display:flex;flex-direction:column;animation:up .22s ease;}
+  @keyframes up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sheet-h{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 10px;}
+  .sheet-h .ti{font-size:18px;font-weight:800;color:#20242b;}
+  .sheet-h .x{font-size:22px;color:#8a8f99;cursor:pointer;width:26px;text-align:center;}
+  .sheet-body{overflow-y:auto;padding:4px 20px 22px;}
+  .td-amt{text-align:center;padding:10px 0 20px;}
+  .td-amt .lb{font-size:13px;color:#9aa0a8;font-weight:700;}
+  .td-amt .v{font-size:30px;font-weight:800;color:#20242b;margin-top:7px;}
+  .td-amt .v.dep{color:var(--dep-blue);}
+  .td-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid #f2f4f7;}
+  .td-k{font-size:14px;color:#8a8f99;font-weight:700;flex:0 0 auto;}
+  .td-v{font-size:14px;color:#20242b;font-weight:700;text-align:right;word-break:break-all;}
+  .td-memo{display:flex;align-items:center;gap:10px;margin-top:12px;}
+  .td-memo .box{flex:1;background:#f4f6f9;border-radius:11px;padding:14px 14px;color:#aeb4bd;font-size:14px;font-weight:600;}
+  .td-memo .reg{background:#20242b;color:#fff;border-radius:11px;padding:14px 20px;font-size:14px;font-weight:800;cursor:pointer;}
+
+  /* ============ 편집모드 ============ */
+  .editing [data-edit]{
+    outline:1.5px dashed var(--edit);outline-offset:2px;border-radius:3px;
+    cursor:text;min-width:14px;
+  }
+  .editing [data-edit]:focus{outline:2px solid var(--edit);background:rgba(255,90,60,.07);}
+  .editing .acct-card,.editing .tx-row,.editing .recent-item,.editing .mm,.editing .acct-btns button{cursor:default;}
+  .editpill{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;
+    display:flex;align-items:center;gap:4px;background:#20242b;color:#fff;
+    border-radius:999px;padding:7px 8px 7px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);
+    font-size:14px;font-weight:700;
+  }
+  .editpill .lbl{display:flex;align-items:center;gap:7px;padding-right:8px;}
+  .editpill .lbl::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--edit);}
+  .editpill button{border:0;border-radius:999px;padding:9px 15px;font-size:14px;font-weight:800;cursor:pointer;}
+  .editpill .done{background:var(--btn-blue);color:#fff;}
+  .editpill .reset{background:#3a3f47;color:#fff;}
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone" id="phone">
 
   <!-- 상태바 -->
-  <div class="statusbar dark">
+  <div class="statusbar">
     <div class="sb-left">
-      <span id="clock">3:57</span>
+      <span id="clock">10:01</span>
       <svg class="sb-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
       <svg class="sb-ico" width="15" height="12" viewBox="0 0 24 20" fill="currentColor"><path d="M2 2h20v14H2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 3l9 7 9-7"/></svg>
-      <svg class="sb-ico" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
     </div>
     <div class="sb-right">
       <span style="font-size:11px;font-weight:700;">LTE<sup>+</sup></span>
       <svg width="18" height="13" viewBox="0 0 24 18" fill="currentColor"><rect x="1" y="12" width="3.5" height="5"/><rect x="6.5" y="9" width="3.5" height="8"/><rect x="12" y="5" width="3.5" height="12"/><rect x="17.5" y="1" width="3.5" height="16"/></svg>
-      <span style="font-weight:700;">48%</span>
-      <span class="batt"><svg width="22" height="12" viewBox="0 0 26 13"><rect x="1" y="1" width="21" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.5" y="2.5" width="9" height="8" rx="1" fill="currentColor"/><rect x="23" y="4" width="2" height="5" rx="1" fill="currentColor"/></svg></span>
+      <span style="font-weight:700;">38%</span>
+      <span class="batt"><svg width="22" height="12" viewBox="0 0 26 13"><rect x="1" y="1" width="21" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.5" y="2.5" width="8" height="8" rx="1" fill="currentColor"/><rect x="23" y="4" width="2" height="5" rx="1" fill="currentColor"/></svg></span>
     </div>
   </div>
 
@@ -180,41 +292,44 @@
   <div class="screen" id="screen-home">
     <div class="scroll">
       <div class="home-head">
-        <div class="home-title">할 일 <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#2b2f36" stroke-width="3"><path d="M4 12l6 6L20 6"/></svg></span></div>
+        <div class="home-title"><span data-edit="home.todo">할 일</span> <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#2b2f36" stroke-width="3"><path d="M4 12l6 6L20 6"/></svg></span></div>
         <div class="head-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <span class="bell" id="bellBtn" title="편집 모드 — 캡션 수정" onclick="toggleEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+            <span class="dot" id="bellDot"></span>
+          </span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="2" y="13" width="4" height="7" rx="2"/><rect x="18" y="13" width="4" height="7" rx="2"/><path d="M20 19a4 4 0 01-4 4h-2"/></svg>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         </div>
       </div>
 
       <div class="promo">
-        <div class="t" id="promoText">IBK 단독 포켓몬 굿즈와<br>I-포켓몬(신용) 구경가자!</div>
+        <div class="t" data-edit="promo">IBK 단독 포켓몬 굿즈와<br>I-포켓몬(신용) 구경가자!</div>
         <div class="mascot">🐧</div>
       </div>
 
       <div class="fin-tabs">
-        <div class="fin-tab on"><span class="ibk-badge">IBK</span>기업은행</div>
-        <div class="fin-tab">다른금융</div>
-        <div class="easy"><span class="sm">가</span><span class="lg">가</span> 쉬운뱅킹</div>
+        <div class="fin-tab on"><span class="ibk-badge">IBK</span><span data-edit="fin.ibk">기업은행</span></div>
+        <div class="fin-tab"><span data-edit="fin.other">다른금융</span></div>
+        <div class="easy"><span class="sm">가</span><span class="lg">가</span> <span data-edit="fin.easy">쉬운뱅킹</span></div>
       </div>
 
       <div class="acct-card" onclick="go('tx')">
         <div class="acct-top">
           <div>
-            <div class="acct-name" id="acctName">보통예금(IBK W통장)</div>
-            <div class="acct-no"><span id="acctNo">408-051742-01-015</span>
+            <div class="acct-name" data-edit="acct.name">보통예금(IBK W통장)</div>
+            <div class="acct-no"><span data-edit="acct.no">408-051742-01-015</span>
               <svg class="cp" viewBox="0 0 24 24" fill="none" stroke="#8e949d" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
             </div>
           </div>
           <div class="dots3">⋮</div>
         </div>
         <div class="acct-bal">
-          <span class="num" id="balance">14,560,905</span><span class="won">원</span>
+          <span class="num" data-edit="acct.bal">14,560,905</span><span class="won">원</span>
           <svg class="rf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
         </div>
         <div class="acct-btns">
-          <button onclick="event.stopPropagation()">이체</button>
+          <button onclick="event.stopPropagation();go('tf-recipient')">이체</button>
           <button onclick="event.stopPropagation()">ATM출금</button>
         </div>
       </div>
@@ -222,32 +337,175 @@
       <div class="dots-ind"><i class="on"></i><i></i></div>
 
       <div class="quick2">
-        <div class="q"><span class="q-ic" style="background:#8b7bf0">₩</span>최근 이체내역 <span class="chev">›</span></div>
-        <div class="q"><span class="q-ic" style="background:#5b9cff">▣</span>신분증·지갑 <span class="chev">›</span></div>
+        <div class="q"><span class="q-ic" style="background:#8b7bf0">₩</span><span data-edit="quick.0">최근 이체내역</span> <span class="chev">›</span></div>
+        <div class="q"><span class="q-ic" style="background:#5b9cff">▣</span><span data-edit="quick.1">신분증·지갑</span> <span class="chev">›</span></div>
       </div>
 
-      <div class="mymenu-h">나만의 맞춤메뉴</div>
+      <div class="mymenu-h" data-edit="mymenu.h">나만의 맞춤메뉴</div>
       <div class="mymenu">
-        <div class="mm"><div class="ic">🗂️</div><div class="lb">전체계좌조회</div></div>
-        <div class="mm"><div class="ic">🪙</div><div class="lb">IBK포인트</div></div>
-        <div class="mm"><div class="ic">🛡️</div><div class="lb">i-ONE 가드</div></div>
-        <div class="mm"><div class="ic add">+</div><div class="lb">추가</div></div>
+        <div class="mm"><div class="ic">🗂️</div><div class="lb" data-edit="mymenu.0">전체계좌조회</div></div>
+        <div class="mm"><div class="ic">🪙</div><div class="lb" data-edit="mymenu.1">IBK포인트</div></div>
+        <div class="mm"><div class="ic">🛡️</div><div class="lb" data-edit="mymenu.2">i-ONE 가드</div></div>
+        <div class="mm"><div class="ic add">+</div><div class="lb" data-edit="mymenu.3">추가</div></div>
       </div>
 
       <div class="promo2">
-        <div class="p2t">2026 더아트프라자</div>
-        <div class="p2big">2026</div>
+        <div class="p2t" data-edit="promo2.t">2026 더아트프라자</div>
+        <div class="p2big" data-edit="promo2.big">2026</div>
       </div>
     </div>
 
-    <!-- 하단 네비 -->
     <div class="tabbar">
-      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v9l6 3"/><circle cx="12" cy="12" r="9"/></svg><span>자산</span></div>
-      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 016 0"/></svg><span>상품</span></div>
-      <div class="tb center"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 13l5 5 11-11" opacity="0"/><text x="12" y="16" font-size="13" text-anchor="middle" fill="#fff" font-weight="800">₩</text><path d="M4 16c3-2 13-2 16 0" stroke="#fff"/></svg></div><span class="lb">톡톡송금</span></div>
-      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M8 8c-2-3 1-5 4-1 3-4 6-2 4 1"/></svg><span>혜택</span></div>
-      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 3 5-8 4 5v8H3z"/></svg><span>주식</span></div>
+      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v9l6 3"/><circle cx="12" cy="12" r="9"/></svg><span data-edit="tab.0">자산</span></div>
+      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 016 0"/></svg><span data-edit="tab.1">상품</span></div>
+      <div class="tb center" onclick="go('tf-recipient')"><div class="c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="12" y="16" font-size="13" text-anchor="middle" fill="#fff" font-weight="800">₩</text><path d="M4 16c3-2 13-2 16 0" stroke="#fff"/></svg></div><span class="lb" data-edit="tab.2">톡톡송금</span></div>
+      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M8 8c-2-3 1-5 4-1 3-4 6-2 4 1"/></svg><span data-edit="tab.3">혜택</span></div>
+      <div class="tb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-6 4 3 5-8 4 5v8H3z"/></svg><span data-edit="tab.4">주식</span></div>
     </div>
+    <div class="navbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+    </div>
+  </div>
+
+  <!-- ========== 이체 1: 받는사람 ========== -->
+  <div class="screen hidden" id="screen-tf-recipient">
+    <div class="subhead">
+      <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('home')"><path d="M15 6l-7 6 7 6"/></svg>
+      <div class="ti" data-edit="tfr.title">이체</div>
+      <div class="rt"><span class="cancel" data-edit="tfr.cancel" onclick="go('home')">취소</span></div>
+    </div>
+    <div class="scroll">
+      <div class="tf-q" data-edit="tfr.q">누구에게 보낼까요?</div>
+      <div class="tf-input"><span data-edit="tfr.input">계좌번호 입력</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      </div>
+      <div class="tf-sub2">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="4" width="10" height="16" rx="2"/><path d="M11 4h2"/></svg><span data-edit="tfr.contact">연락처 이체</span></span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><span data-edit="tfr.search">계좌 검색</span></span>
+      </div>
+      <div class="tf-tabs">
+        <div class="tf-tab on" data-edit="tfr.tab0">계좌번호</div>
+        <div class="tf-tab" data-edit="tfr.tab1">즐겨찾기</div>
+      </div>
+      <div class="tf-myacct"><span data-edit="tfr.myacct">내 계좌</span><span class="cv">⌄</span></div>
+      <div class="recentH"><span data-edit="tfr.recentH">최근 이체</span> <span data-edit="tfr.recentN">16</span></div>
+      <div class="recent-list" id="recentList"></div>
+      <div style="height:30px"></div>
+    </div>
+    <div class="navbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+    </div>
+  </div>
+
+  <!-- ========== 이체 2: 금액 ========== -->
+  <div class="screen hidden" id="screen-tf-amount">
+    <div class="subhead">
+      <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('tf-recipient')"><path d="M15 6l-7 6 7 6"/></svg>
+      <div class="ti" data-edit="tfa.title">이체</div>
+      <div class="rt"><span class="cancel" data-edit="tfa.cancel" onclick="go('home')">취소</span></div>
+    </div>
+    <div class="scroll">
+      <div class="amt-from">
+        <div class="amt-lbl" data-edit="tfa.from">내 계좌에서</div>
+        <div class="amt-accrow">
+          <span class="av" style="background:var(--ibk-blue)">IBK</span>
+          <span class="amt-acc"><span data-edit="tfa.fromAcc">기업 408-051742-01-015</span><span class="cv"> ⌄</span></span>
+        </div>
+        <div class="amt-avail"><span data-edit="tfa.availLbl">출금가능금액</span> <span data-edit="tfa.avail">14,560,905원</span></div>
+      </div>
+      <div class="amt-from" style="padding-top:18px">
+        <div class="amt-lbl"><span id="toNameLbl" data-edit="tfa.to">송현준</span>님 계좌로</div>
+        <div class="amt-accrow">
+          <span class="av" id="toAv" style="background:#2b73e8">제</span>
+          <span class="amt-acc"><span id="toAcc" data-edit="tfa.toAcc">제주 18902006125890</span></span>
+          <span class="amt-change" data-edit="tfa.change">변경</span>
+        </div>
+      </div>
+      <div class="amt-big"><span id="amtBig" data-edit="amount.value">200,000</span><span class="won">원</span></div>
+      <div class="amt-han" id="amtHan">20만원</div>
+    </div>
+    <div class="keypad">
+      <div class="kq" onclick="addAmount(10000)">+1만</div>
+      <div class="kq" onclick="addAmount(50000)">+5만</div>
+      <div class="kq" onclick="addAmount(100000)">+10만</div>
+      <div class="kq" onclick="addAmount(1000000)">+100만</div>
+    </div>
+    <div class="kp">
+      <div class="k" onclick="press('1')">1</div><div class="k" onclick="press('2')">2</div><div class="k" onclick="press('3')">3</div>
+      <div class="k" onclick="press('4')">4</div><div class="k" onclick="press('5')">5</div><div class="k" onclick="press('6')">6</div>
+      <div class="k" onclick="press('7')">7</div><div class="k" onclick="press('8')">8</div><div class="k" onclick="press('9')">9</div>
+      <div class="k" onclick="press('00')">00</div><div class="k" onclick="press('0')">0</div><div class="k" onclick="press('back')">⌫</div>
+    </div>
+    <div class="chkrow"><span class="chkbox"></span><span data-edit="tfa.reserve">예약이체</span></div>
+    <div class="cta-wrap"><button class="cta" onclick="go('tf-confirm')"><span data-edit="tfa.next">다음</span></button></div>
+    <div class="navbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+    </div>
+  </div>
+
+  <!-- ========== 이체 3: 확인 ========== -->
+  <div class="screen hidden" id="screen-tf-confirm">
+    <div class="subhead">
+      <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('tf-amount')"><path d="M15 6l-7 6 7 6"/></svg>
+      <div class="ti" data-edit="tfc.title">이체</div>
+      <div class="rt"><span class="cancel" data-edit="tfc.cancel" onclick="go('home')">취소</span></div>
+    </div>
+    <div class="scroll">
+      <div class="cf-to">
+        <span class="av" id="cfAv" style="background:#2b73e8">제</span>
+        <div>
+          <div class="cf-toname"><span id="cfToName" data-edit="tfc.toName">송현준</span>님께</div>
+          <div class="cf-toacc" id="cfToAcc" data-edit="tfc.toAcc">제주 9003307910054</div>
+        </div>
+      </div>
+      <div class="cf-amount"><span id="cfAmount" data-edit="tfc.amount">200,000</span><span data-edit="tfc.ask">원을 보낼까요?</span></div>
+      <div class="cf-card">
+        <div class="cf-row">
+          <span class="cf-k" data-edit="tfc.k0">출금계좌</span>
+          <span class="cf-v"><span data-edit="tfc.fromAcc">기업 408-051742-01-015</span><span class="sub" data-edit="tfc.fromName">보통예금(IBK W통장)</span></span>
+        </div>
+        <div class="cf-row">
+          <span class="cf-k" data-edit="tfc.k1">내 통장 표기</span>
+          <span class="cf-v"><span data-edit="tfc.myVal">송현준</span><span class="chev">›</span></span>
+        </div>
+        <div class="cf-row">
+          <span class="cf-k" data-edit="tfc.k2">받는 분 통장 표기</span>
+          <span class="cf-v"><span data-edit="tfc.rcvVal">송현준</span><span class="chev">›</span></span>
+        </div>
+      </div>
+      <div class="cf-more"><span data-edit="tfc.more">추가정보입력</span> <span>⌄</span></div>
+      <div class="cf-free" data-edit="tfc.free">기업은행 평생 수수료 무료!</div>
+    </div>
+    <div class="cta-wrap"><button class="cta" onclick="go('tf-receipt')"><span data-edit="tfc.send">보내기</span></button></div>
+    <div class="navbar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+    </div>
+  </div>
+
+  <!-- ========== 이체 4: 이체확인증 ========== -->
+  <div class="screen hidden" id="screen-tf-receipt">
+    <div class="subhead">
+      <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('home')"><path d="M15 6l-7 6 7 6"/></svg>
+      <div class="ti" data-edit="rc.title">이체결과조회</div>
+      <div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+    </div>
+    <div class="scroll">
+      <div class="rc-h" data-edit="rc.h">이체확인증</div>
+      <div class="rc-table" id="rcTable"></div>
+      <div class="rc-note" data-edit="rc.note">위의 내용이 정상적으로 이체되었음을 확인합니다.</div>
+      <div class="rc-note2" data-edit="rc.note2">위 확인증은 고객 편의를 위해 제공되는 것으로 참고용으로만 사용하실 수 있습니다.</div>
+      <div class="rc-logo"><span class="bx">IBK</span><span data-edit="rc.logo">기업은행</span></div>
+      <div style="height:20px"></div>
+    </div>
+    <div class="cta-wrap"><button class="cta" onclick="go('home')"><span data-edit="rc.share">공유하기</span></button></div>
     <div class="navbar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
@@ -257,111 +515,351 @@
 
   <!-- ========== 거래내역조회 ========== -->
   <div class="screen hidden" id="screen-tx">
-    <div class="tx-head">
+    <div class="subhead">
       <svg class="bk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" onclick="go('home')"><path d="M15 6l-7 6 7 6"/></svg>
-      <div class="ti">거래내역조회</div>
-      <svg class="hm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <div class="ti" data-edit="tx.title">거래내역조회</div>
+      <div class="rt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
     </div>
-    <div class="tx-tabs"><span class="on">간편이체내역</span><span>예적금이체내역</span><span>ATM출금내역</span></div>
+    <div class="tx-tabs"><span class="on" data-edit="tx.tab0">간편이체내역</span><span data-edit="tx.tab1">예약이체내역</span><span data-edit="tx.tab2">ATM출금내역</span></div>
     <div class="scroll">
-      <div class="tx-filter" id="txFilter">1개월 · 전체 · 최신순 <span class="cv">⌄</span></div>
-      <div class="tx-range" id="txRange">2026.10.01 ~ 2026.10.30</div>
+      <div class="tx-filter"><span data-edit="tx.filter">1개월 · 전체 · 최신순</span> <span class="cv">⌄</span></div>
+      <div class="tx-range" data-edit="tx.range">2026.10.01 ~ 2026.10.30</div>
       <div class="tx-list" id="txList"></div>
       <div class="tx-foot"></div>
     </div>
     <div class="navbar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-7 6 7 6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
     </div>
+  </div>
+
+  <!-- ========== 상세거래내역 모달 ========== -->
+  <div class="modal hidden" id="modalDetail">
+    <div class="dim" onclick="closeDetail()"></div>
+    <div class="sheet">
+      <div class="sheet-h">
+        <div class="ti" data-edit="td.title">상세거래내역</div>
+        <div class="x" onclick="closeDetail()">✕</div>
+      </div>
+      <div class="sheet-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- 편집모드 플로팅 -->
+  <div class="editpill hidden" id="editpill">
+    <span class="lbl">편집 중 — 캡션을 눌러 수정</span>
+    <button class="reset" onclick="resetOverrides()">초기화</button>
+    <button class="done" onclick="toggleEdit()">완료</button>
   </div>
 
 </div>
 
 <script>
 /* ============================================================
-   DATA — 여기만 고치면 전체 화면이 바뀐다.
+   DATA — 기본값. 종(🔔) 편집모드로 UI에서 직접 바꾼 값은
+   localStorage("ibk_overrides")에 저장되어 이 기본값을 덮어씀.
    amount 양수=입금(파란색), 음수=출금(검정).
-   bal = 그 거래 직후 잔액(화면 표시값, 자동계산 안 함 — 영상 그대로).
    ============================================================ */
 const DATA = {
-  account: {
-    name: "보통예금(IBK W통장)",
-    number: "408-051742-01-015",
-    balance: "14,560,905",          // 홈 화면 큰 숫자
-  },
-  filter: "1개월 · 전체 · 최신순",
-  range: "2026.10.01 ~ 2026.10.30",
+  account: { name:"보통예금(IBK W통장)", number:"408-051742-01-015", balance:"14,560,905" },
+  recent: [
+    { name:"송현준", acc:"제주 18902006125890", date:"2026.10.30" },
+    { name:"송현준", acc:"제주 18902006124753", date:"2026.10.30" },
+    { name:"송현준", acc:"국민 18902006552257", date:"2026.10.29" },
+    { name:"김정운", acc:"국민 98210300008370", date:"2026.10.19" },
+    { name:"송현준", acc:"제주 9003307910054", date:"2026.10.19" },
+    { name:"Mobing", acc:"농협 79004138490031", date:"2026.10.22" },
+    { name:"김태규", acc:"제주 33333365061859", date:"2026.10.22" },
+    { name:"임영수", acc:"농협 06462133808510", date:"2026.10.19" },
+    { name:"박상진", acc:"기업 01076209278", date:"2026.09.28" },
+    { name:"오세훈", acc:"신한 11023401174", date:"2026.09.21" },
+  ],
+  amount: "200,000",
+  // 이체확인증 표(라벨, 값)
+  receipt: [
+    ["거래구분","즉시이체"],
+    ["거래일시","2026.10.30 14:06:29"],
+    ["출금계좌","408-0517**-01-***"],
+    ["내통장표시","송현준"],
+    ["예금주","송현준"],
+    ["입금은행","제주 18902006125890"],
+    ["수수료","0원"],
+    ["받는분통장표시","송현준"],
+    ["이체금액","2,000,000원"],
+  ],
   tx: [
-    { dt:"10.30 14:55", name:"송현준",   amount: 4560000,  bal:"14,560,905" },
-    { dt:"10.30 14:54", name:"송현준",   amount: 4000000,  bal:"10,000,905" },
-    { dt:"10.30 14:06", name:"송현준",   amount:-2000000,  bal:"6,000,905" },
-    { dt:"10.30 14:04", name:"송현준",   amount:-3000000,  bal:"8,000,905" },
-    { dt:"10.30 14:03", name:"KPS9768",  amount: 1,        bal:"11,000,905" },
-    { dt:"10.29 23:21", name:"송현준",   amount: 1900000,  bal:"11,000,904" },
-    { dt:"10.29 23:21", name:"송현준",   amount: 2000000,  bal:"9,100,904" },
-    { dt:"10.29 23:20", name:"송현준",   amount: 3100000,  bal:"7,100,904" },
-    { dt:"10.29 23:20", name:"송현준",   amount: 4000000,  bal:"4,000,904" },
-    { dt:"10.29 20:44", name:"송현준",   amount:-2000000,  bal:"904" },
-    { dt:"10.29 20:43", name:"송현준",   amount:-3000000,  bal:"2,000,904" },
-    { dt:"10.29 20:41", name:"KPS4158",  amount: 1,        bal:"5,000,904" },
-    { dt:"10.29 20:11", name:"송현준",   amount: 2000000,  bal:"5,000,903" },
-    { dt:"10.29 20:11", name:"송현준",   amount: 3000000,  bal:"3,000,903" },
-    { dt:"10.25 09:57", name:"송현준",   amount:-2000000,  bal:"903" },
-    { dt:"10.24 11:25", name:"송현준",   amount:-2000000,  bal:"2,000,903" },
-    { dt:"10.22 21:24", name:"송현준",   amount:-1461700,  bal:"4,000,903" },
-    { dt:"10.22 20:35", name:"Mobing",   amount:-38300,    bal:"5,462,603", spaced:true },
-    { dt:"10.22 18:57", name:"송현준",   amount:-500000,   bal:"5,500,903" },
-    { dt:"10.21 14:25", name:"송현준",   amount:-2000000,  bal:"6,000,903" },
-    { dt:"10.19 14:46", name:"송현준",   amount:-2000000,  bal:"8,000,903" },
-    { dt:"10.19 14:43", name:"KPS7225",  amount: 1,        bal:"10,000,903" },
-    { dt:"10.19 13:01", name:"인증036",  amount: 1,        bal:"10,000,902" },
-    { dt:"10.19 12:00", name:"송현준",   amount: 1500000,  bal:"10,000,901" },
-    { dt:"10.19 12:00", name:"송현준",   amount: 2600000,  bal:"8,500,901" },
-    { dt:"10.19 12:00", name:"송현준",   amount: 2900000,  bal:"5,900,901" },
-    { dt:"10.19 12:00", name:"송현준",   amount: 3000000,  bal:"3,000,901" },
-    { dt:"10.19 11:32", name:"오매불망", amount: 1,        bal:"901" },
-    { dt:"10.17 23:00", name:"송현준",   amount:-100,      bal:"900" },
-    { dt:"10.17 22:44", name:"김대규",   amount: 1000,     bal:"1,000" },
+    { dt:"10.30 14:55", name:"송현준",   amount: 4560000,  bal:"14,560,905", type:"타행이체" },
+    { dt:"10.30 14:54", name:"송현준",   amount: 4000000,  bal:"10,000,905", type:"타행이체" },
+    { dt:"10.30 14:06", name:"송현준",   amount:-2000000,  bal:"6,000,905",  type:"스마트뱅킹" },
+    { dt:"10.30 14:04", name:"송현준",   amount:-3000000,  bal:"8,000,905",  type:"스마트뱅킹" },
+    { dt:"10.30 14:03", name:"KPS9768",  amount: 1,        bal:"11,000,905", type:"타행이체" },
+    { dt:"10.29 23:21", name:"송현준",   amount: 1900000,  bal:"11,000,904", type:"타행이체" },
+    { dt:"10.29 23:21", name:"송현준",   amount: 2000000,  bal:"9,100,904",  type:"타행이체" },
+    { dt:"10.29 23:20", name:"송현준",   amount: 3100000,  bal:"7,100,904",  type:"타행이체" },
+    { dt:"10.29 23:20", name:"송현준",   amount: 4000000,  bal:"4,000,904",  type:"타행이체" },
+    { dt:"10.29 20:44", name:"송현준",   amount:-2000000,  bal:"904",        type:"스마트뱅킹" },
+    { dt:"10.29 20:43", name:"송현준",   amount:-3000000,  bal:"2,000,904",  type:"스마트뱅킹" },
+    { dt:"10.29 20:41", name:"KPS4158",  amount: 1,        bal:"5,000,904",  type:"타행이체" },
+    { dt:"10.29 20:11", name:"송현준",   amount: 2000000,  bal:"5,000,903",  type:"타행이체" },
+    { dt:"10.29 20:11", name:"송현준",   amount: 3000000,  bal:"3,000,903",  type:"타행이체" },
+    { dt:"10.25 09:57", name:"송현준",   amount:-2000000,  bal:"903",        type:"스마트뱅킹" },
+    { dt:"10.24 11:25", name:"송현준",   amount:-2000000,  bal:"2,000,903",  type:"스마트뱅킹" },
+    { dt:"10.22 21:24", name:"송현준",   amount:-1461700,  bal:"4,000,903",  type:"스마트뱅킹" },
+    { dt:"10.22 20:35", name:"Mobing",   amount:-38300,    bal:"5,462,603",  type:"타행이체", spaced:true },
+    { dt:"10.22 18:57", name:"송현준",   amount:-500000,   bal:"5,500,903",  type:"스마트뱅킹" },
+    { dt:"10.21 14:25", name:"송현준",   amount:-2000000,  bal:"6,000,903",  type:"스마트뱅킹" },
+    { dt:"10.19 14:46", name:"송현준",   amount:-2000000,  bal:"8,000,903",  type:"스마트뱅킹" },
+    { dt:"10.19 14:43", name:"KPS7225",  amount: 1,        bal:"10,000,903", type:"타행이체" },
+    { dt:"10.19 13:01", name:"인증036",  amount: 1,        bal:"10,000,902", type:"타행이체" },
+    { dt:"10.19 12:00", name:"송현준",   amount: 1500000,  bal:"10,000,901", type:"타행이체" },
+    { dt:"10.19 12:00", name:"송현준",   amount: 2600000,  bal:"8,500,901",  type:"타행이체" },
+    { dt:"10.19 12:00", name:"송현준",   amount: 2900000,  bal:"5,900,901",  type:"타행이체" },
+    { dt:"10.19 12:00", name:"송현준",   amount: 3000000,  bal:"3,000,901",  type:"타행이체" },
+    { dt:"10.19 11:32", name:"오매불망", amount: 1,        bal:"901",        type:"타행이체" },
+    { dt:"10.17 23:00", name:"송현준",   amount:-100,      bal:"900",        type:"스마트뱅킹" },
+    { dt:"10.17 22:44", name:"김대규",   amount: 1000,     bal:"1,000",      type:"타행이체" },
   ],
 };
 
-/* ---- 렌더 ---- */
+/* ---- 편집 override 저장소 ---- */
+const LS_KEY = "ibk_overrides";
+let overrides = {};
+try { overrides = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch(e){ overrides = {}; }
+let defaults = {};            // 정적 캡션 원본(초기화용)
+let editing = false;
+const phone = document.getElementById("phone");
+
+function saveOverrides(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(overrides)); }catch(e){} }
+
+/* ---- 유틸 ---- */
 const won = n => (n<0?"-":"") + Math.abs(n).toLocaleString("en-US") + "원";
+const amtText = n => (n<0?"-":"") + Math.abs(n).toLocaleString("en-US");
+const PAL = ["#2b73e8","#e0564e","#f0a500","#30a46c","#8b5cf6","#1f6feb","#d6409f","#00a3bf","#6b7280"];
+function avColor(name){ let h=0; for(const c of String(name)) h=(h*31+c.charCodeAt(0))>>>0; return PAL[h%PAL.length]; }
+function initial(name){ return String(name||"?").trim().charAt(0) || "?"; }
 
-function render(){
-  document.getElementById("acctName").textContent = DATA.account.name;
-  document.getElementById("acctNo").textContent   = DATA.account.number;
-  document.getElementById("balance").textContent  = DATA.account.balance;
-  document.getElementById("txFilter").innerHTML   = DATA.filter + ' <span class="cv">⌄</span>';
-  document.getElementById("txRange").textContent  = DATA.range;
+/* 한글 금액 읽기: 200000 -> "20만원" */
+function koreanAmount(v){
+  let n = parseInt(String(v).replace(/[^0-9]/g,""),10);
+  if(!n) return "0원";
+  let s="", rest=n;
+  const units=[["억",100000000],["만",10000]];
+  for(const [u,val] of units){
+    const q=Math.floor(rest/val);
+    if(q>0){ s += q.toLocaleString("en-US")+u+" "; rest%=val; }
+  }
+  if(rest>0) s += rest.toLocaleString("en-US");
+  return s.trim()+"원";
+}
 
-  const list = document.getElementById("txList");
-  list.innerHTML = DATA.tx.map(t => `
-    <div class="tx-row">
-      <div class="tx-dt">${t.dt}</div>
-      <div class="tx-main">
-        <div class="tx-name${t.spaced?' spaced':''}">${t.name}</div>
-        <div class="tx-amt${t.amount>0?' dep':''}">${won(t.amount)}</div>
+/* ============ 렌더러 ============ */
+function renderRecent(){
+  const el = document.getElementById("recentList");
+  el.innerHTML = DATA.recent.map((r,i)=>`
+    <div class="recent-item" onclick="pickRecipient(${i})">
+      <span class="av" style="background:${avColor(r.name)}">${initial(r.name)}</span>
+      <div class="ri-txt">
+        <div class="ri-name" data-edit="recent.${i}.name">${r.name}</div>
+        <div class="ri-acc" data-edit="recent.${i}.acc">${r.acc}</div>
       </div>
-      <div class="tx-bal">${t.bal}원</div>
+      <div class="ri-date" data-edit="recent.${i}.date">최근이체 ${r.date}</div>
     </div>`).join("");
 }
 
-/* ---- 화면 전환 ---- */
-function go(s){
-  document.getElementById("screen-home").classList.toggle("hidden", s!=="home");
-  document.getElementById("screen-tx").classList.toggle("hidden",   s!=="tx");
-  const sc = (s==="home"?document.querySelector("#screen-home .scroll"):document.querySelector("#screen-tx .scroll"));
-  if(sc) sc.scrollTop = 0;
+function renderReceipt(){
+  const el = document.getElementById("rcTable");
+  el.innerHTML = DATA.receipt.map((row,i)=>`
+    <div class="rc-row">
+      <div class="rc-k" data-edit="rc.k${i}">${row[0]}</div>
+      <div class="rc-v" data-edit="rc.v${i}">${row[1]}</div>
+    </div>`).join("");
 }
+
+function renderTx(){
+  const el = document.getElementById("txList");
+  el.innerHTML = DATA.tx.map((t,i)=>`
+    <div class="tx-row" onclick="openDetail(${i})">
+      <div class="tx-dt" data-edit="tx.${i}.dt">${t.dt}</div>
+      <div class="tx-main">
+        <div class="tx-name${t.spaced?' spaced':''}" data-edit="tx.${i}.name">${t.name}</div>
+        <div class="tx-amt${t.amount>0?' dep':''}" data-edit="tx.${i}.amount">${amtText(t.amount)}원</div>
+      </div>
+      <div class="tx-bal"><span data-edit="tx.${i}.bal">${t.bal}</span>원</div>
+    </div>`).join("");
+}
+
+/* 상세 모달 */
+let detailIdx = -1;
+function openDetail(i){
+  detailIdx = i;
+  const t = DATA.tx[i];
+  const dep = t.amount>0;
+  const body = document.getElementById("detailBody");
+  const rows = [
+    ["거래일시", "2026."+t.dt],
+    ["거래구분", t.type||"스마트뱅킹"],
+    ["거래내역", dep?"입금":"출금"],
+    ["예금주", "제주"],
+    ["상대계좌번호", (t.acc||"18902006125890")],
+    ["상대계좌 예금주", t.name],
+  ];
+  body.innerHTML = `
+    <div class="td-amt">
+      <div class="lb" data-edit="td.${i}.amtlbl">${dep?"입금액":"출금액"}</div>
+      <div class="v${dep?' dep':''}" data-edit="td.${i}.amt">${won(t.amount)}</div>
+    </div>
+    ${rows.map((r,k)=>`
+      <div class="td-row">
+        <span class="td-k" data-edit="td.${i}.k${k}">${r[0]}</span>
+        <span class="td-v" data-edit="td.${i}.v${k}">${r[1]}</span>
+      </div>`).join("")}
+    <div class="td-memo">
+      <span class="box" data-edit="td.${i}.memo">최대 25자까지 입력</span>
+      <span class="reg" data-edit="td.memobtn">등록</span>
+    </div>`;
+  document.getElementById("modalDetail").classList.remove("hidden");
+  applyOverrides(); if(editing) setEditable(true);
+}
+function closeDetail(){ document.getElementById("modalDetail").classList.add("hidden"); }
+
+/* 전체 동적영역 다시 그림 */
+function renderDynamic(){ renderRecent(); renderReceipt(); renderTx(); }
+
+/* ============ 금액 키패드 ============ */
+let amtDigits = "200000";
+function syncAmount(){
+  const t = Number(amtDigits||"0").toLocaleString("en-US");
+  const big = document.getElementById("amtBig");
+  const han = document.getElementById("amtHan");
+  const cf  = document.getElementById("cfAmount");
+  if(big) big.textContent = t;
+  if(han) han.textContent = koreanAmount(amtDigits);
+  if(cf)  cf.textContent  = t;
+  // 편집값으로도 저장(동기화) — amount.value / tfc.amount
+  overrides["amount.value"] = t; overrides["tfc.amount"] = t; saveOverrides();
+}
+function press(d){
+  if(d==="back"){ amtDigits = amtDigits.slice(0,-1) || "0"; }
+  else { amtDigits = (amtDigits==="0"?"":amtDigits) + d; }
+  amtDigits = String(parseInt(amtDigits||"0",10));
+  if(amtDigits.length>12) amtDigits = amtDigits.slice(0,12);
+  syncAmount();
+}
+function addAmount(n){
+  amtDigits = String((parseInt(amtDigits||"0",10)) + n);
+  syncAmount();
+}
+function loadAmountFromDisplay(){
+  // 편집모드로 바꾼 값/override 반영
+  const big = document.getElementById("amtBig");
+  const base = (big && big.textContent) || DATA.amount;
+  amtDigits = String(parseInt(String(base).replace(/[^0-9]/g,"")||"0",10));
+}
+
+/* ============ 받는사람 선택 ============ */
+let recipient = DATA.recent[0]; // 기본: 제주 18902006125890 송현준
+function pickRecipient(i){
+  recipient = DATA.recent[i];
+  applyRecipient();
+  go("tf-amount");
+}
+function applyRecipient(){
+  const r = recipient;
+  const set = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  set("toNameLbl", r.name); set("toAcc", r.acc);
+  set("cfToName", r.name); set("cfToAcc", r.acc);
+  const toAv=document.getElementById("toAv"), cfAv=document.getElementById("cfAv");
+  if(toAv){ toAv.textContent=initial(r.name); toAv.style.background=avColor(r.name); }
+  if(cfAv){ cfAv.textContent=initial(r.name); cfAv.style.background=avColor(r.name); }
+}
+
+/* ============ 화면 전환 ============ */
+const SCREENS = ["home","tf-recipient","tf-amount","tf-confirm","tf-receipt","tx"];
+function go(s){
+  closeDetail();
+  SCREENS.forEach(x=>{
+    document.getElementById("screen-"+x).classList.toggle("hidden", x!==s);
+  });
+  if(s==="tf-amount"){ loadAmountFromDisplay(); syncAmount(); }
+  if(s==="tf-confirm"){ syncAmount(); }
+  const sc = document.querySelector("#screen-"+s+" .scroll");
+  if(sc) sc.scrollTop = 0;
+  if(editing) setEditable(true); // 편집모드 유지
+}
+
+/* ============ 편집모드 ============ */
+function applyOverrides(){
+  document.querySelectorAll("[data-edit]").forEach(el=>{
+    const k = el.getAttribute("data-edit");
+    if(Object.prototype.hasOwnProperty.call(overrides,k)) el.textContent = overrides[k];
+  });
+}
+function captureDefaults(){
+  document.querySelectorAll("[data-edit]").forEach(el=>{
+    const k = el.getAttribute("data-edit");
+    if(!(k in defaults)) defaults[k] = el.textContent;
+  });
+}
+function setEditable(on){
+  document.querySelectorAll("[data-edit]").forEach(el=>{
+    if(on){ el.setAttribute("contenteditable","plaintext-only");
+            if(el.contentEditable!=="plaintext-only") el.setAttribute("contenteditable","true"); }
+    else el.removeAttribute("contenteditable");
+  });
+  phone.classList.toggle("editing", on);
+  document.getElementById("editpill").classList.toggle("hidden", !on);
+  document.getElementById("bellDot").style.display = on?"block":"none";
+}
+function toggleEdit(){
+  editing = !editing;
+  setEditable(editing);
+}
+function resetOverrides(){
+  if(!confirm("수정한 내용을 모두 원본으로 되돌릴까요?")) return;
+  overrides = {}; saveOverrides();
+  // 정적 캡션 복원
+  document.querySelectorAll("[data-edit]").forEach(el=>{
+    const k = el.getAttribute("data-edit");
+    if(k in defaults) el.textContent = defaults[k];
+  });
+  // 동적 영역 재생성(기본값)
+  amtDigits = String(parseInt(DATA.amount.replace(/[^0-9]/g,""),10));
+  renderDynamic(); applyRecipient(); syncAmount();
+  captureDefaults();
+  if(editing) setEditable(true);
+}
+
+/* 편집 입력 → override 저장 (편집 중 재렌더 안 함: 캐럿 보존) */
+phone.addEventListener("input", e=>{
+  if(!editing) return;
+  const el = e.target.closest ? e.target.closest("[data-edit]") : null;
+  if(!el) return;
+  const k = el.getAttribute("data-edit");
+  overrides[k] = el.innerText;
+  saveOverrides();
+});
 
 /* 실시간 시계 */
 function tick(){
   const d=new Date();
-  document.getElementById("clock").textContent = d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");
+  const el=document.getElementById("clock");
+  if(el) el.textContent = d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");
 }
-render(); tick(); setInterval(tick,10000);
+
+/* ============ 초기화 ============ */
+function boot(){
+  renderDynamic();
+  applyRecipient();
+  loadAmountFromDisplay();
+  // amount.value override 있으면 그걸 우선
+  if("amount.value" in overrides){ amtDigits = String(parseInt(String(overrides["amount.value"]).replace(/[^0-9]/g,"")||"0",10)); }
+  captureDefaults();   // 원본 저장(초기화용)
+  applyOverrides();    // 저장된 수정값 덮어쓰기
+  syncAmount();
+  tick(); setInterval(tick,10000);
+}
+boot();
 </script>
 </body>
 </html>
